@@ -1,8 +1,10 @@
 import csv
 import os.path
+import os
 import time
-from datetime import datetime, timedelta
 import numpy as np
+import shutil
+from datetime import datetime, timedelta
 
 
 def timeit(func):
@@ -39,6 +41,7 @@ class FileProcessor:
         else:
             raise FileNotFoundError(f"Wrong file name or path - {filename}")
 
+
     def __iter__(self):
         return iter(self.data)
 
@@ -72,7 +75,7 @@ class FileProcessor:
         data = self.filtered_data if use_filtered else self.data
         with open(filename, "w") as output_file:
             for index, _ in enumerate(data[self.header[0]]):
-                values_to_write = [data[col_name][index] for col_name in data]
+                values_to_write = [str(data[col_name][index]) for col_name in data]
                 output_file.write(sep.join(values_to_write) + "\n")
 
     def filter_by_date(self, data, col_name, filter_dates):
@@ -204,6 +207,7 @@ def graph_1():
                     "%Y-%m-%d %H:%M:%S", hours=2)
     file.filter_by_date(file.filtered_data, "photovoltaic_measurement_timestamp",
                         ["2019-04-29"])
+    file.filter_by_value(file.filtered_data, "photovoltaic_measurement_active_power", 0)
     file.write_col_in_file("photovoltaic_measurement_timestamp",
                            FIRST_GRAPH_DIR + "time_vals_1.txt")
     file.write_col_in_file("photovoltaic_measurement_active_power",
@@ -231,6 +235,9 @@ def graph_3():
     file.shift_date(file.filtered_data, "Datetime", "%d/%m/%Y %H:%M:%S", hours=2)
     file.filter_by_date(file.filtered_data, "Datetime", ["24/11/2010"])
     file.write_col_in_file("Datetime", THIRD_GRAPH_DIR + "time_vals_3.txt")
+    file.to_float(file.filtered_data, "Global_active_power")
+    file.filtered_data["Global_active_power"] = [power * 1000 for power in file.filtered_data["Global_active_power"]]
+    file.preview()
     file.write_col_in_file("Global_active_power", THIRD_GRAPH_DIR + "power_vals_3.txt")
     file.write_data_in_file(THIRD_GRAPH_DIR + "graph_3.txt")
 
@@ -240,15 +247,32 @@ def graph_4():
     # Ideal load data
     # NOTE THAT MATLAB USES DATA FROM GRAPH 3
     # SO IT'S MANDATORY TO MANUALLY COPY OUTPUT FILES FROM GRAPH 3 DIR
+    THIRD_GRAPH_DIR = "graph_3/"
     FOURTH_GRAPH_DIR = "graph_4/"
     os.makedirs(FOURTH_GRAPH_DIR, exist_ok=True)
+    copy_file(THIRD_GRAPH_DIR, FOURTH_GRAPH_DIR, file_extension="graph_3.txt")
+    raw_graph_4 = FileProcessor(FOURTH_GRAPH_DIR + "graph_3.txt")
+    raw_graph_4.split_columns(raw_graph_4.filtered_data, "col3", ["date", "time"])
+    raw_graph_4.preview()
+    raw_graph_4.to_float(raw_graph_4.filtered_data, "col2")
+    length = len(raw_graph_4.filtered_data["col2"])
+    mean_value = sum(raw_graph_4.filtered_data["col2"]) / length
+    raw_graph_4.filtered_data["mean"] = [mean_value] * length
+    raw_graph_4.preview()
+    raw_graph_4.write_col_in_file("mean", FOURTH_GRAPH_DIR + "power_vals_4.txt")
+    raw_graph_4.write_col_in_file("time", FOURTH_GRAPH_DIR + "time_vals_4.txt")
 
 
 def graph_5():
     # Graph 5
     # Entropy
+    # Uses files from Graph 1 and Graph 2
+    FIRST_GRAPH_DIR = "graph_1/"
+    SECOND_GRAPH_DIR = "graph_2/"
     FIFTH_GRAPH_DIR = "graph_5/"
     os.makedirs(FIFTH_GRAPH_DIR, exist_ok=True)
+    copy_file(FIRST_GRAPH_DIR, FIFTH_GRAPH_DIR, file_extension="graph_1.txt")
+    copy_file(SECOND_GRAPH_DIR, FIFTH_GRAPH_DIR, file_extension="graph_2.txt")
 
     r_file = FileProcessor(FIFTH_GRAPH_DIR + "graph_1.txt")
     r_file.filter_by_value(r_file.filtered_data, "col1", 0)
@@ -285,8 +309,13 @@ def graph_5():
 def graph_6():
     # Graph 6
     # Entropy
+    THIRD_GRAPH_DIR = "graph_3/"
+    FOURTH_GRAPH_DIR = "graph_4/"
     SIXTH_GRAPH_DIR = "graph_6/"
     os.makedirs(SIXTH_GRAPH_DIR, exist_ok=True)
+    copy_file(THIRD_GRAPH_DIR, SIXTH_GRAPH_DIR, file_extension="graph_3.txt")
+    copy_file(FOURTH_GRAPH_DIR, SIXTH_GRAPH_DIR, file_extension="time_vals_4.txt")
+    copy_file(FOURTH_GRAPH_DIR, SIXTH_GRAPH_DIR, file_extension="power_vals_4.txt")
 
     r_file = FileProcessor(SIXTH_GRAPH_DIR + "graph_3.txt")
     r_file.filter_by_value(r_file.filtered_data, "col2", 0)
@@ -301,12 +330,12 @@ def graph_6():
     i_file_time = FileProcessor(SIXTH_GRAPH_DIR + "time_vals_4.txt")
     i_file_power = FileProcessor(SIXTH_GRAPH_DIR + "power_vals_4.txt")
     i_file = merge_two_to_one(i_file_time, i_file_power)
-    i_file.split_columns(i_file.filtered_data, "col0", ["date", "time"])
+
     i_file.to_float(i_file.filtered_data, "col0_merge")
     i_file.calc_probability(i_file.filtered_data, "col0_merge", "col0")
     i_file.preview()
 
-    i_file.write_col_in_file("time", SIXTH_GRAPH_DIR + "out_ideal_data_time_vals.txt")
+    i_file.write_col_in_file("col0", SIXTH_GRAPH_DIR + "out_ideal_data_time_vals.txt")
     i_file.write_col_in_file("entropy", SIXTH_GRAPH_DIR + "out_ideal_data_entropy.txt")
     i_file.write_col_in_file("prob", SIXTH_GRAPH_DIR + "out_ideal_data_prob.txt")
 
@@ -314,7 +343,7 @@ def graph_6():
         r_file.filtered_data["time"],
         r_file.filtered_data["entropy"],
         "%H:%M:%S",
-        i_file.filtered_data["time"],
+        i_file.filtered_data["col0"],
         i_file.filtered_data["entropy"],
         "%H:%M:%S",
     )
@@ -327,8 +356,14 @@ def graph_6():
 def graph_7():
     # Graph 7
     # Entropy and relay graph
+    FIFTH_GRAPH_DIR = "graph_5/"
+    SIXTH_GRAPH_DIR = "graph_6/"
     SEVENTH_GRAPH_DIR = "graph_7/"
     os.makedirs(SEVENTH_GRAPH_DIR, exist_ok=True)
+    copy_file(FIFTH_GRAPH_DIR, SEVENTH_GRAPH_DIR, file_extension="inp_diff_data_time_vals.txt")
+    copy_file(FIFTH_GRAPH_DIR, SEVENTH_GRAPH_DIR, file_extension="inp_diff_entropy.txt")
+    copy_file(SIXTH_GRAPH_DIR, SEVENTH_GRAPH_DIR, file_extension="out_diff_data_time_vals.txt")
+    copy_file(SIXTH_GRAPH_DIR, SEVENTH_GRAPH_DIR, file_extension="out_diff_entropy.txt")
 
     inp_file_time = FileProcessor(SEVENTH_GRAPH_DIR + "inp_diff_data_time_vals.txt")
     inp_file_diff = FileProcessor(SEVENTH_GRAPH_DIR + "inp_diff_entropy.txt")
@@ -379,6 +414,14 @@ def signum(data, offset=0, factor=1):
     return result
 
 
+def copy_file(source, target, file_extension=".txt"):
+    for file_name in os.listdir(source):
+        if file_name.endswith(file_extension):
+            src_file_path = os.path.join(source, file_name)
+            dst_file_path = os.path.join(target, file_name)
+            shutil.copy(src_file_path, dst_file_path)
+
+
 if __name__ == "__main__":
     drop_cols_file_1 = ['photovoltaic_measurement_reactive_power',
                         'photovoltaic_measurement_global_irradiance_pv_plane',
@@ -392,4 +435,10 @@ if __name__ == "__main__":
                         "Sub_metering_2",
                         "Sub_metering_3"]
 
+    graph_1()
+    graph_2()
+    graph_3()
+    graph_4()
+    graph_5()
+    graph_6()
     graph_7()

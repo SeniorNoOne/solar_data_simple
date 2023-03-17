@@ -20,17 +20,17 @@ figure
 plot(real_time_vals, real_prob)
 hold on
 plot(ideal_time_vals, ideal_prob)
-legend('Ідеальна крива', 'Реальна крива')
+legend('Реальне навантаження', 'Ідеальне навантаження')
 xlabel("Час, год")
 ylabel("p")
 title("Часова залежність ймовірності")
 
 
 figure
-plot(ideal_time_vals, ideal_entropy)
-hold on
 plot(real_time_vals, real_entropy)
-legend('Ідеальна крива', 'Реальна крива')
+hold on
+plot(ideal_time_vals, ideal_entropy)
+legend('Реальне навантаження', 'Ідеальне навантаження')
 xlabel("Час, год")
 ylabel("H")
 title("Часова залежність ентропії навантаження")

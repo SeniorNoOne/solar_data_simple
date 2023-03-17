@@ -19,16 +19,23 @@ figure
 plot(inp_time_vals, inp_diff)
 hold on
 plot(out_time_vals, out_diff)
-legend('Ідеальна крива', 'Реальна крива')
-xlabel("Час, год")
+legend('Ентропія джерела', 'Ентропія навантаження')
+xlabel("Час, год") 
 ylabel("p")
-title("Часова залежність ймовірності")
+title("Часова залежність ентропії")
 
 
 figure
 plot(total_time_vals, total_diff)
-hold on
-plot(total_time_vals, total_relay)
-legend('Ентропійна дивергенція', 'Релейний сигнал')
 xlabel("Час, год")
-ylabel("p")
+ylabel("D")
+title("Часова залежність ентропійної дивергенції")
+
+figure
+plot(total_time_vals, total_relay)
+xlabel("Час, год")
+ylabel("R")
+ylim([-0.1, 1.1])
+title("Сигнал керування релейним елементом")
+
+
