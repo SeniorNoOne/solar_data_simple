@@ -1,193 +1,187 @@
-# import numpy as np
-
-# graph 2
-def process_time_file():
-    formatted_time_file = open("formatted_time_file.txt", "w")
-
-    with open("time.txt", "r") as time_file:
-        for line in time_file:
-            line = line.replace("\n", "")
-            line = f'"{line}"\n'
-            formatted_time_file.write(line)
+from classes.file_processor import FileProcessor
+from classes.utils import copy_files, make_dir
+from config import GRAPH_CONFIGS
 
 
-def process_power_file():
-    formatted_power_file = open("formatted_power_file.txt", "w")
+def graph_1():
+    # Graph 1
+    # Real SP data
+    graph_conf = GRAPH_CONFIGS["graph_1"]
+    make_dir(graph_conf.path)
 
-    with open("power.txt", "r") as power_file:
-        for line in power_file:
-            line = line.replace("\n", "")
-            line = line.replace(",", ".")
-            line = f"{line}\n"
-            formatted_power_file.write(line)
-
-
-# graph 3
-def process_household_data():
-    formatted_household_data = open("formatted_household_data.txt", "w")
-
-    with open("household_power_consumption.txt") as household_data:
-        next(household_data)
-        header = "Date;Time;Active_consumed_energy;Is_full\n"
-        formatted_household_data.write(header)
-        for line in household_data:
-            line = to_float(line.split(";"))
-            date, time, g_ap, g_rp, v, g_intens, sub_m1, sub_m2, sub_m3 = line
-            ae_consumed = g_ap * 1000 / 60
-            result_str = f"{date};{time};{ae_consumed},\n"
-            formatted_household_data.write(result_str)
+    file = FileProcessor(graph_conf.filename, dt_format=graph_conf.dt_format,
+                         delimiter=graph_conf.delimiter)
+    file.drop_col_from_data(graph_conf.cols_to_drop)
+    file.filter_by_date(graph_conf.dt_col, ["2019-04-29", "2019-04-30"])
+    file.shift_date("photovoltaic_measurement_timestamp", hours=2)
+    file.filter_by_date(graph_conf.dt_col, ["2019-04-29"])
+    file.convert_data()
+    file.filter_by_value(graph_conf.data_col, min_val=0.1)
+    file.preview()
+    file.write_col_in_file(graph_conf.dt_col, graph_conf.path + "time_vals_1.txt")
+    file.write_col_in_file(graph_conf.data_col, graph_conf.path + "data_vals_1.txt")
+    file.write_data_in_file(graph_conf.output_filename)
 
 
-def get_household_data_by_date(filter_date):
-    with open("formatted_household_data.txt") as household_data:
-        next(household_data)
-        house_hold_time = open("formatted_household_datetime.txt", "w")
-        house_hold_energy = open("formatted_household_energy.txt", "w")
-        for line in household_data:
-            date, time, energy = line.split(";")
-            if date == filter_date:
-                time = f'"{time}"\n'
-                house_hold_time.write(time)
-                house_hold_energy.write(energy)
+def graph_2():
+    # Graph 2
+    # Real SP data
+    # NOTE THAT ALL DATA WERE OBTAINED MANUALLY
+    graph_conf = GRAPH_CONFIGS["graph_2"]
+    make_dir(graph_conf.path)
 
 
-# SP p-v curves
-def process_pv_array_data():
-    formatted_pv_array = open("formatted_pv_array.txt", "w")
+def graph_3():
+    # Graph 3
+    # Real load data
+    graph_conf = GRAPH_CONFIGS["graph_3"]
+    make_dir(graph_conf.path)
 
-    with open("Photovoltaic array A measurements.csv") as pv_array:
-        next(pv_array)
-        for line in pv_array:
-            line = to_float(line.split(","))
-            date_time, g_ap, g_rp, *_ = line
-
-            if g_ap in ["", "\n"]:
-                g_ap = prev_val
-
-            prev_val = g_ap
-
-            formatted_pv_array.write(f"{date_time},{g_ap}\n")
-
-
-def get_pv_array_data_by_date(filter_date):
-    with open("formatted_pv_array.txt") as pv_array:
-        pv_array_time = open("formatted_pv_array_time.txt", "w")
-        pv_array_power = open("formatted_pv_array_power.txt", "w")
-        for line in pv_array:
-            date_time, power = line.split(",")
-            if filter_date in date_time:
-                _, time = date_time.split(" ")
-                time = f'"{time}"\n'
-                pv_array_time.write(time)
-                pv_array_power.write(power)
+    file = FileProcessor(graph_conf.filename, dt_format=graph_conf.dt_format,
+                         delimiter=graph_conf.delimiter)
+    file.drop_col_from_data(graph_conf.cols_to_drop)
+    file.join_columns(["Date", "Time"], "Datetime", delimiter=" ")
+    file.filter_by_date("Datetime", ["24/11/2010", "23/11/2010"])
+    file.filter_by_date("Datetime", ["24/11/2010"])
+    file.convert_data()
+    file.write_col_in_file("Datetime", graph_conf.path + "time_vals_3.txt")
+    file.data["Global_active_power"] = [power * 1000 for power in file.data["Global_active_power"]]
+    file.preview()
+    file.write_col_in_file("Global_active_power", graph_conf.path + "data_vals_3.txt")
+    file.write_data_in_file(graph_conf.path + "graph_3.txt")
 
 
-def calc_prob(data, point):
-    """points_num = len(set(data))
-    prob_list, rang = np.histogram(data, bins=points_num)
+def graph_4():
+    # Graph 4
+    # Ideal load data
+    # NOTE THAT MATLAB USES DATA FROM GRAPH 3
+    graph_conf_prev = GRAPH_CONFIGS["graph_3"]
+    graph_conf = GRAPH_CONFIGS["graph_4"]
 
-    start = rang[0]
-    for index, end in enumerate(rang[1:]):
-        if start <= point <= end:
-            prob = prob_list[index]
-            break
+    make_dir(graph_conf.path)
+    copy_files(graph_conf_prev.path, graph_conf.path, file_extension="graph_3.txt")
 
-        start = end
-    return prob / points_num"""
-    return data.count(point) / len(data)
-
-
-def calc_entr(data, prob_filename, entr_filename):
-    prob_lst = []
-    entr_lst = []
-
-    prob_file = open(f"{prob_filename}.txt", "w")
-    entr_file = open(f"{entr_filename}.txt", "w")
-
-    for index in range(0, len(data) // 60):
-        print(index)
-        print(data[index * 60: (index+1) * 60])
-        sum_ = sum(data[index * 60: (index + 1) * 60])
-        print(sum_)
-        for power in data[index * 60: (index + 1) * 60]:
-            prob_lst.append(power / sum_)
-        print(prob_lst[-60:])
-        print()
-        entr = sum([-prob * np.emath.log(prob) for prob in prob_lst[-60::]])
-        entr_lst.extend([entr] * 60)
-
-    print(prob_lst)
-
-    for index in range(len(prob_lst)):
-        prob_file.write(f"{prob_lst[index]}\n")
-        entr_file.write(f"{entr_lst[index]}\n")
-
-    """buff = []
-
-    for i in entr_lst:
-        if i not in buff:
-            buff.append(i)
-    [print(i) for i in buff]
-    """
-
-def filter_data(timevals, data, time_filename, data_filename):
-    new_timevals = []
-    new_data = []
-
-    for index, dat in enumerate(data):
-        if dat > 0:
-            new_data.append(dat)
-            new_timevals.append(timevals[index])
-
-    with open(f"{time_filename}.txt", "w") as f:
-        for time in new_timevals:
-            f.write(time)
-
-    with open(f"{data_filename}.txt", "w") as f:
-        for dat in new_data:
-            f.write(f'{dat}\n')
+    file = FileProcessor(graph_conf.path + "graph_3.txt")
+    file.split_columns("col3", ["date", "time"], delimiter=" ")
+    file.convert_data()
+    length = len(file.data["col2"])
+    mean_value = sum(file.data["col2"]) / length
+    file.data["mean"] = [mean_value] * length
+    file.preview()
+    file.write_col_in_file("mean", graph_conf.path + "data_vals_4.txt")
+    file.write_col_in_file("time", graph_conf.path + "time_vals_4.txt")
 
 
-# utils
-def to_float(iterbales):
-    res = []
-    for iterable in iterbales:
-        try:
-            res.append(float(iterable))
-        except ValueError:
-            if iterable in ("?", "\n"):
-                res.append(0)
-            else:
-                res.append(iterable)
-    return res
+def graph_5():
+    # Graph 5
+    # Input entropy
+    # Uses files from Graph 1 and Graph 2
+    graph_conf_1 = GRAPH_CONFIGS["graph_1"]
+    graph_conf_2 = GRAPH_CONFIGS["graph_2"]
+    graph_conf = GRAPH_CONFIGS["graph_5"]
+    make_dir(graph_conf.path)
+    copy_files(graph_conf_1.path, graph_conf.path, file_extension="graph_1.txt")
+    copy_files(graph_conf_2.path, graph_conf.path, file_extension="graph_2.txt")
+
+    r_file = FileProcessor(graph_conf.path + "graph_1.txt", dt_format="%H:%M:%S")
+    r_file.convert_data()
+    r_file.filter_by_value("col1", 0.1)
+    r_file.preview()
+    r_file.split_columns("col0", ["date", "time"], delimiter=" ")
+    r_file.calc_probability("col1", "time")
+    r_file.preview()
+    r_file.write_col_in_file("stats_time", graph_conf.path + "inp_real_time_vals.txt")
+    r_file.write_col_in_file("entropy", graph_conf.path + "inp_real_entropy.txt")
+    r_file.write_col_in_file("probability", graph_conf.path + "inp_real_prob.txt")
+
+    i_file = FileProcessor(graph_conf.path + "graph_2.txt", dt_format="%H:%M")
+    i_file.convert_data()
+    i_file.calc_probability("col1", "col0")
+    i_file.preview()
+    i_file.write_col_in_file("stats_time", graph_conf.path + "inp_ideal_time_vals.txt")
+    i_file.write_col_in_file("entropy", graph_conf.path + "inp_ideal_entropy.txt")
+    i_file.write_col_in_file("probability", graph_conf.path + "inp_ideal_prob.txt")
+
+    i_file.subtract_col("stats_time", "entropy", r_file, "stats_time", "entropy")
+    i_file.preview()
+    i_file.write_col_in_file("diff_data", graph_conf.path + "inp_diff_entropy.txt")
+    i_file.write_col_in_file("diff_time", graph_conf.path + "inp_diff_time_vals.txt")
 
 
-def main():
-    # get_household_data_by_date("25/11/2010")
-    # process_household_data()
-    # process_pv_array_data()
-    # get_pv_array_data_by_date("2019-05-05")
+def graph_6():
+    # Graph 6
+    # Output entropy
+    # Uses files from Graph 3 and Graph 4
+    graph_conf_3 = GRAPH_CONFIGS["graph_3"]
+    graph_conf_4 = GRAPH_CONFIGS["graph_4"]
+    graph_conf = GRAPH_CONFIGS["graph_6"]
+    make_dir(graph_conf.path)
+    copy_files(graph_conf_3.path, graph_conf.path, file_extension="graph_3.txt")
+    copy_files(graph_conf_4.path, graph_conf.path, file_extension="vals_4.txt")
 
-    with open("formatted_power_file.txt", "r") as data_file:
-        data = [float(i.strip("\n")) for i in data_file]
-        calc_entr(data, "prob_inp_ideal", "entr_inp_ideal")
+    r_file = FileProcessor(graph_conf_4.path + "graph_3.txt", dt_format="%H:%M:%S")
+    r_file.convert_data()
+    r_file.filter_by_value("col2", 0.1)
+    r_file.split_columns("col3", ["date", "time"], delimiter=" ")
+    r_file.calc_probability("col2", "time")
+    r_file.preview()
+    r_file.write_col_in_file("stats_time", graph_conf.path + "out_real_time_vals.txt")
+    r_file.write_col_in_file("entropy", graph_conf.path + "out_real_entropy.txt")
+    r_file.write_col_in_file("probability", graph_conf.path + "out_real_prob.txt")
+
+    i_file_time = FileProcessor(graph_conf.path + "time_vals_4.txt", dt_format="%H:%M:%S")
+    i_file_data = FileProcessor(graph_conf.path + "data_vals_4.txt")
+    i_file_time.merge_two_to_one(i_file_data)
+    i_file_time.convert_data()
+    i_file_time.calc_probability("col0_merged", "col0")
+    i_file_time.preview()
+    i_file_time.write_col_in_file("stats_time", graph_conf.path + "out_ideal_time_vals.txt")
+    i_file_time.write_col_in_file("entropy", graph_conf.path + "out_ideal_entropy.txt")
+    i_file_time.write_col_in_file("probability", graph_conf.path + "out_ideal_prob.txt")
+
+    i_file_time.subtract_col("stats_time", "entropy", r_file, "stats_time", "entropy")
+    i_file_time.preview()
+    i_file_time.write_col_in_file("diff_data", graph_conf.path + "out_diff_entropy.txt")
+    i_file_time.write_col_in_file("diff_time", graph_conf.path + "out_diff_time_vals.txt")
 
 
-    with open("formatted_pv_array_power.txt", "r") as data_file:
-        data = [float(i.strip("\n")) for i in data_file]
-        f = open("formatted_pv_array_time.txt", "r")
-        timevals = f.readlines()
-        filter_data(timevals, data, "filtered_pv_array_time", "filtered_pv_array_power")
+def graph_7():
+    # Graph 7
+    # Entropy divergence and relay graph
+    # Uses files from Graph 5 and Graph 6
+    graph_conf_5 = GRAPH_CONFIGS["graph_5"]
+    graph_conf_6 = GRAPH_CONFIGS["graph_6"]
+    graph_conf = GRAPH_CONFIGS["graph_7"]
+    make_dir(graph_conf.path)
+    copy_files(graph_conf_5.path, graph_conf.path, file_extension="inp_diff_time_vals.txt")
+    copy_files(graph_conf_5.path, graph_conf.path, file_extension="inp_diff_entropy.txt")
+    copy_files(graph_conf_6.path, graph_conf.path, file_extension="out_diff_time_vals.txt")
+    copy_files(graph_conf_6.path, graph_conf.path, file_extension="out_diff_entropy.txt")
 
-    print()
-    with open("filtered_pv_array_power.txt", "r") as data_file:
-        data = [float(i.strip("\n")) for i in data_file]
-        calc_entr(data, "prob_inp", "entr_inp")
+    inp_file_time = FileProcessor(graph_conf.path + "inp_diff_time_vals.txt", dt_format="%H:%M")
+    inp_file_diff = FileProcessor(graph_conf.path + "inp_diff_entropy.txt")
+    inp_file_time.merge_two_to_one(inp_file_diff)
+    inp_file_time.convert_data()
+    inp_file_time.preview()
 
-    print()
-    for i in range(0, len(timevals) // 60 + 1):
-        print(len(timevals[i * 60: (i + 1) * 60]), timevals[i * 60: (i + 1) * 60])
+    out_file_time = FileProcessor(graph_conf.path + "out_diff_time_vals.txt", dt_format="%H:%M:%S")
+    out_file_diff = FileProcessor(graph_conf.path + "out_diff_entropy.txt")
+    out_file_time.merge_two_to_one(out_file_diff)
+    out_file_time.convert_data()
+    out_file_time.preview()
+
+    inp_file_time.subtract_col("col0", "col0_merged", out_file_time, "col0", "col0_merged")
+    inp_file_time.signum("diff_data", 1, 0.5)
+    inp_file_time.preview()
+    inp_file_time.write_col_in_file("diff_data", graph_conf.path + "total_entropy_diff.txt")
+    inp_file_time.write_col_in_file("diff_time", graph_conf.path + "total_time.txt")
+    inp_file_time.write_col_in_file("diff_data_signum", graph_conf.path + "total_step.txt")
+
 
 if __name__ == "__main__":
-    main()
-
+    graph_1()
+    graph_2()
+    graph_3()
+    graph_4()
+    graph_5()
+    graph_6()
