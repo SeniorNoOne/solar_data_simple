@@ -6,8 +6,9 @@ time_vals = importdata("time_vals_2.txt", formatString);
 time_vals = datetime(time_vals, 'Format', 'HH:mm');
 power_vals = importdata("data_vals_2.txt"); 
 
+
 figure
-plot(time_vals, power_vals, "--.", "markersize", 3)
+plot(time_vals, power_vals, "black--.", "markersize", 3)
 xlabel("„ас, год")
 ylabel("P_в_и_х, ¬т")
-title("≤деальна крива потужност≥ на виходн≥ сон€чних панелей")
+title("≤деальна крива потужност≥ на виход≥ сон€чних панелей")

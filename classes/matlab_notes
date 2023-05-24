@@ -1,0 +1,34 @@
+# Code snippet for creating .mat file that can be used in simulink model
+
+# Graph 3
+time_step = 500e-6;
+stop_time = 5000;
+points_num = stop_time / time_step;
+s_time_vals = time_step * (1:points_num);
+repeats = ceil(points_num / length(res_vals_tr));
+new_res_vals = [];
+res_vals_tr = res_vals_tr(length(res_vals_tr):-1:1);
+
+for idx = (length(res_vals_tr):-1:1)
+   new_res_vals = cat(1, new_res_vals, res_vals_tr(idx) * ones(repeats, 1));
+end
+
+ts = timeseries(new_res_vals(1:length(s_time_vals)), s_time_vals);
+save("res_output_data.mat", "ts", "-v7.3");
+
+
+# Graph 7
+time_step = 500e-6;
+stop_time = 5000;
+points_num = stop_time / time_step;
+s_time_vals = time_step * (1:points_num);
+repeats = ceil(points_num / length(total_relay));
+new_total_relay = [];
+
+for idx = (1:length(total_relay))
+   new_total_relay = cat(1, new_total_relay, total_relay(idx) * ones(repeats, 1));
+end
+
+ts = timeseries(new_total_relay(1:length(s_time_vals)), s_time_vals);
+save("relay_output_data.mat", "ts", "-v7.3");
+

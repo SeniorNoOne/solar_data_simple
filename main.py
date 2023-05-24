@@ -1,6 +1,11 @@
 from classes.file_processor import FileProcessor
-from classes.utils import copy_files, make_dir
+from classes.utils import copy_files, make_dir, input_calc, output_calc
 from config import GRAPH_CONFIGS
+
+
+# Equivalent res constants
+VOLTAGE = 100
+CUT_FACTOR = 0.15
 
 
 def graph_1():
@@ -178,10 +183,29 @@ def graph_7():
     inp_file_time.write_col_in_file("diff_data_signum", graph_conf.path + "total_step.txt")
 
 
-if __name__ == "__main__":
+def calc_graphs():
     graph_1()
     graph_2()
     graph_3()
     graph_4()
     graph_5()
     graph_6()
+    print("Graphs calculated")
+
+
+def calc_equivalent_res():
+    input_calc(VOLTAGE, CUT_FACTOR)
+    output_calc(VOLTAGE, CUT_FACTOR)
+    print("Res calculated")
+
+
+if __name__ == "__main__":
+    match input("1 - calc graphs\n"
+                "2 - calc equivalent res"
+                ": "):
+        case "1":
+            calc_graphs()
+        case "2":
+            calc_equivalent_res()
+        case _:
+            print("Wrong input. Try again\n\n")

@@ -6,7 +6,7 @@ time_vals = datetime(time_vals, 'Format', 'HH:mm');
 power_vals = importdata("data_vals_4.txt"); 
 
 figure
-plot(time_vals, power_vals,  "markersize", 3)     
+plot(time_vals, power_vals, "black", "markersize", 3)     
 xlabel("Час, год")
 ylabel("P_н, Вт")
 title("Ідеальна крива потужності навантаження")

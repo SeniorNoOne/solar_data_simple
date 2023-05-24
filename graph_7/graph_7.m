@@ -19,23 +19,21 @@ figure
 plot(inp_time_vals, inp_diff)
 hold on
 plot(out_time_vals, out_diff)
-legend('Ентропія джерела', 'Ентропія навантаження')
 xlabel("Час, год") 
 ylabel("p")
+legend('Ентропія джерела', 'Ентропія навантаження')
 title("Часова залежність ентропії")
 
 
 figure
-plot(total_time_vals, total_diff)
+plot(total_time_vals, total_diff, "black")
 xlabel("Час, год")
 ylabel("D")
-title("Часова залежність ентропійної дивергенції")
+title("Сигнал блоку визначення різниці")
 
 figure
-plot(total_time_vals, total_relay)
+plot(total_time_vals, total_relay, "black")
 xlabel("Час, год")
 ylabel("R")
-ylim([-0.1, 1.1])
 title("Сигнал керування релейним елементом")
-
-
+ylim([-0.1, 1.1])

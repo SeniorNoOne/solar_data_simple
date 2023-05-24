@@ -20,17 +20,17 @@ figure
 plot(real_time_vals, real_prob)
 hold on
 plot(ideal_time_vals, ideal_prob)
-legend('Реальне джерело', 'Ідеальне джерело')
 xlabel("Час, год")
 ylabel("p")
+legend('Реальне джерело', 'Ідеальне джерело')
 title("Часова залежність ймовірності")
 ylim([0, 0.045])
 
 
 figure
-plot(real_time_vals, real_entropy)
+plot(real_time_vals, real_entropy, "black")
 hold on
-plot(ideal_time_vals, ideal_entropy)
+plot(ideal_time_vals, ideal_entropy, "black--")
 legend('Реальне джерело', 'Ідеальне джерело')
 xlabel("Час, год")
 ylabel("H")
@@ -39,9 +39,7 @@ ylim([3.75, 4.2])
 
 
 figure
-plot(diff_time_vals, diff_entropy)
+plot(diff_time_vals, diff_entropy, "black")
 xlabel("Час, год")
 ylabel("D")
 title("Часова залежність ентропійної дивергенції джерела")
-
-

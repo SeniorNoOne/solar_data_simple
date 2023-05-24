@@ -20,26 +20,26 @@ figure
 plot(real_time_vals, real_prob)
 hold on
 plot(ideal_time_vals, ideal_prob)
-legend('Реальне навантаження', 'Ідеальне навантаження')
 xlabel("Час, год")
 ylabel("p")
+legend('Реальне навантаження', 'Ідеальне навантаження')
 title("Часова залежність ймовірності")
 
 
 figure
-plot(real_time_vals, real_entropy)
+plot(real_time_vals, real_entropy, "black")
 hold on
-plot(ideal_time_vals, ideal_entropy)
+plot(ideal_time_vals, ideal_entropy, "black--")
 legend('Реальне навантаження', 'Ідеальне навантаження', 'Location', 'southeast')
 xlabel("Час, год")
 ylabel("H")
-ylim([3.5, 4.15])
 title("Часова залежність ентропії навантаження")
+ylim([3.5, 4.15])
 
 
 figure
-plot(diff_time_vals, diff_entropy)
+plot(diff_time_vals, diff_entropy, "black")
 xlabel("Час, год")
 ylabel("D")
+title("Часова залежність ентропійної дивергенції навантаження")
 ylim([-0.05, 0.55])
-title("Часова залежність ентропії навантаження")
