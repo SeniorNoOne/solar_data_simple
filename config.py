@@ -65,6 +65,14 @@ GRAPH_PARAMS = {
         "name": "graph_7",
         "filename": "",
     },
+    "graph_1_2": {
+        "name": "graph_1_2",
+        "filename": "",
+    },
+    "graph_3_4": {
+        "name": "graph_3_4",
+        "filename": "",
+    },
 }
 
 GRAPH_CONFIGS = dict()

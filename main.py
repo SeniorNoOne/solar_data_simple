@@ -183,6 +183,42 @@ def graph_7():
     inp_file_time.write_col_in_file("diff_data_signum", graph_conf.path + "total_step.txt")
 
 
+def graph_1_2():
+    # Uses files from Graph 1 and Graph 2
+    graph_conf_1 = GRAPH_CONFIGS["graph_1"]
+    graph_conf_2 = GRAPH_CONFIGS["graph_2"]
+    graph_conf = GRAPH_CONFIGS["graph_1_2"]
+    make_dir(graph_conf.path)
+    copy_files(graph_conf_1.path, graph_conf.path, file_extension="data_vals_1.txt")
+    copy_files(graph_conf_1.path, graph_conf.path, file_extension="time_vals_1.txt")
+    copy_files(graph_conf_2.path, graph_conf.path, file_extension="data_vals_2.txt")
+    copy_files(graph_conf_2.path, graph_conf.path, file_extension="time_vals_2.txt")
+
+    graph_1_time = FileProcessor(graph_conf.path + "time_vals_1.txt", dt_format="%H:%M")
+    graph_1_time.split_columns('col0', ['date', 'time'], delimiter=' ')
+    graph_1_time.drop_col_from_data(['date', 'col0'])
+    graph_1_time.preview()
+    graph_1_time.write_col_in_file('time',  graph_conf.path + 'time_vals_1_no_date.txt')
+
+
+def graph_3_4():
+    # Uses files from Graph 3 and Graph 4
+    graph_conf_3 = GRAPH_CONFIGS["graph_3"]
+    graph_conf_4 = GRAPH_CONFIGS["graph_4"]
+    graph_conf = GRAPH_CONFIGS["graph_3_4"]
+    make_dir(graph_conf.path)
+    copy_files(graph_conf_3.path, graph_conf.path, file_extension="data_vals_3.txt")
+    copy_files(graph_conf_3.path, graph_conf.path, file_extension="time_vals_3.txt")
+    copy_files(graph_conf_4.path, graph_conf.path, file_extension="data_vals_4.txt")
+    copy_files(graph_conf_4.path, graph_conf.path, file_extension="time_vals_4.txt")
+
+    graph_1_time = FileProcessor(graph_conf.path + "time_vals_3.txt", dt_format="%H:%M")
+    graph_1_time.split_columns('col0', ['date', 'time'], delimiter=' ')
+    graph_1_time.drop_col_from_data(['date', 'col0'])
+    graph_1_time.preview()
+    graph_1_time.write_col_in_file('time',  graph_conf.path + 'time_vals_3_no_date.txt')
+
+
 def calc_graphs():
     graph_1()
     graph_2()
@@ -193,6 +229,11 @@ def calc_graphs():
     print("Graphs calculated")
 
 
+def combined_graphs():
+    graph_1_2()
+    graph_3_4()
+
+
 def calc_equivalent_res():
     input_calc(VOLTAGE, CUT_FACTOR)
     output_calc(VOLTAGE, CUT_FACTOR)
@@ -201,11 +242,14 @@ def calc_equivalent_res():
 
 if __name__ == "__main__":
     match input("1 - calc graphs\n"
-                "2 - calc equivalent res"
+                "2 - calc equivalent res\n"
+                "3 - calc combined graphs"
                 ": "):
         case "1":
             calc_graphs()
         case "2":
             calc_equivalent_res()
+        case "3":
+            combined_graphs()
         case _:
             print("Wrong input. Try again\n\n")
